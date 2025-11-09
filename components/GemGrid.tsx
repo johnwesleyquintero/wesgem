@@ -9,9 +9,10 @@ interface GemIconProps {
 }
 
 const SymbolIcon: React.FC<GemIconProps> = ({ symbol, isSpinning, isWinning }) => {
+  if (!symbol.type) return null; // Don't render empty slots during cascade
   const visual = SymbolVisuals[symbol.type];
   
-  const spinClass = isSpinning ? 'animate-gem-spin' : ''; // Can reuse or create a new one
+  const spinClass = isSpinning ? 'animate-gem-spin' : '';
   const winClass = isWinning ? 'animate-win-glow' : '';
 
   return (
@@ -28,11 +29,10 @@ const SymbolIcon: React.FC<GemIconProps> = ({ symbol, isSpinning, isWinning }) =
 interface GemGridProps {
   gems: GameSymbol[]; // Now expecting a flat array of all symbols
   gameState: GameState;
-  onLockGem: (id: string) => void; // No longer used but kept for prop compatibility
-  winningGemType: SymbolType | null; // This logic needs to be updated to handle multiple winning symbols
+  winningSymbolIds: Set<string>;
 }
 
-const GemGrid: React.FC<GemGridProps> = ({ gems, gameState }) => {
+const GemGrid: React.FC<GemGridProps> = ({ gems, gameState, winningSymbolIds }) => {
   const isSpinning = gameState === 'SPINNING';
 
   return (
@@ -43,8 +43,7 @@ const GemGrid: React.FC<GemGridProps> = ({ gems, gameState }) => {
       }}
     >
       {gems.map((symbol) => {
-        // Simple winning state for now, will need enhancement
-        const isWinning = false; 
+        const isWinning = winningSymbolIds.has(symbol.id);
         return (
           <SymbolIcon key={symbol.id} symbol={symbol} isSpinning={isSpinning} isWinning={isWinning} />
         );

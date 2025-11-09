@@ -37,6 +37,7 @@ const App: React.FC = () => {
   const [lastWin, setLastWin] = useState<number>(0);
   const [multiplier, setMultiplier] = useState<number>(1);
   const [freeSpins, setFreeSpins] = useState<number>(0);
+  const [winningSymbolIds, setWinningSymbolIds] = useState<Set<string>>(new Set());
   
   useEffect(() => {
     setGrid(generateGrid());
@@ -50,12 +51,15 @@ const App: React.FC = () => {
     setMultiplier(1);
     setFreeSpins(0);
     setGrid(generateGrid());
+    setWinningSymbolIds(new Set());
     setGameState('IDLE');
   }, []);
 
   const runCascade = useCallback((currentGrid: Symbol[][], currentMultiplier: number) => {
     setGameState('EVALUATING');
     const { winningSymbols, totalWin, scatterCount } = evaluateGrid(currentGrid);
+    
+    setWinningSymbolIds(winningSymbols);
 
     if (totalWin > 0 || scatterCount > 0) {
       const winAmount = totalWin * currentMultiplier;
@@ -100,6 +104,7 @@ const App: React.FC = () => {
         if(freeSpins > 0) {
           setFreeSpins(prev => prev-1);
         }
+        setWinningSymbolIds(new Set());
         setGameState('IDLE');
     }
 
@@ -118,6 +123,7 @@ const App: React.FC = () => {
     }
     setLastWin(0);
     setMultiplier(1);
+    setWinningSymbolIds(new Set());
 
     const newGrid = generateGrid();
     setGrid(newGrid);
@@ -137,7 +143,7 @@ const App: React.FC = () => {
             <HUD tokens={tokens} comboStreak={multiplier} freeSpins={freeSpins} />
           </header>
 
-          <GemGrid gems={grid.flat()} gameState={gameState} onLockGem={() => {}} winningGemType={null} />
+          <GemGrid gems={grid.flat()} gameState={gameState} winningSymbolIds={winningSymbolIds} />
           
           <SpinButton gameState={gameState} onSpin={handleSpin} />
         </main>
