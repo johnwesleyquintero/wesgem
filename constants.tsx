@@ -1,44 +1,45 @@
 import React from 'react';
-import { GemType } from './types';
+import { SymbolType } from './types';
 
-export const GRID_SIZE = 3;
-export const INITIAL_TOKENS = 50;
-export const SPIN_COST = 1;
+// --- Core Game Configuration ---
+export const GRID_ROWS = 4;
+export const GRID_COLS = 5;
+export const INITIAL_TOKENS = 1000; // Increased for higher volatility
+export const SPIN_COST = 10; // Higher cost per spin
 export const SPIN_ANIMATION_DURATION = 1000;
-export const SPIN_COOLDOWN = 1500;
+export const CASCADE_ANIMATION_DURATION = 500;
 
-export const GEM_TYPES = Object.values(GemType);
+// --- Symbol Definitions ---
+export const SYMBOL_TYPES = [
+  SymbolType.J, SymbolType.Q, SymbolType.K, SymbolType.A,
+  SymbolType.SPADE, SymbolType.HEART, SymbolType.CLUB, SymbolType.DIAMOND,
+];
 
-// Fix: Replaced JSX.Element with React.ReactElement to resolve TypeScript namespace error.
-export const GemVisuals: Record<GemType, { icon: React.ReactElement; color: string; shadow: string }> = {
-  [GemType.DIAMOND]: {
-    icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-16 h-16"><path d="M12.001 2.003c.966 0 1.905.183 2.766.521a24.876 24.876 0 0 1 4.544 2.872.75.75 0 0 1-.22 1.253l-4.545 2.872a.75.75 0 0 1-.69 0l-4.545-2.872a.75.75 0 0 1-.22-1.253 24.878 24.878 0 0 1 4.544-2.872c.86-.338 1.8-.521 2.765-.521ZM12 11.25a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path fillRule="evenodd" d="M12 21.75c-4.835 0-9.15-2.226-12-5.736a.75.75 0 0 1 .53-1.286C3.123 13.04 7.21 11.25 12 11.25c4.79 0 8.877 1.79 11.47 3.728a.75.75 0 0 1 .53 1.286C21.15 19.524 16.835 21.75 12 21.75Z" clipRule="evenodd" /></svg>,
-    color: 'text-cyan-300',
-    shadow: 'drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]'
-  },
-  [GemType.RUBY]: {
-    icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-16 h-16"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" /></svg>,
-    color: 'text-red-500',
-    shadow: 'drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]'
-  },
-  [GemType.SAPPHIRE]: {
-    icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-16 h-16"><path d="M12 1.5a.75.75 0 0 1 .75.75V7.5h-1.5V2.25A.75.75 0 0 1 12 1.5ZM12 22.5a.75.75 0 0 1-.75-.75V16.5h1.5v5.25a.75.75 0 0 1-.75.75ZM6 12.75a.75.75 0 0 1-.75.75H2.25a.75.75 0 0 1 0-1.5H5.25a.75.75 0 0 1 .75.75ZM21.75 12a.75.75 0 0 1 .75.75v0a.75.75 0 0 1-.75.75H18.75a.75.75 0 0 1 0-1.5h2.25a.75.75 0 0 1 .75.75ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>,
-    color: 'text-blue-500',
-    shadow: 'drop-shadow-[0_0_8px_rgba(59,130,246,0.7)]'
-  },
-  [GemType.EMERALD]: {
-    icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-16 h-16"><path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.647c1.295.742 1.295 2.545 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>,
-    color: 'text-emerald-400',
-    shadow: 'drop-shadow-[0_0_8px_rgba(52,211,153,0.7)]'
-  },
-  [GemType.AMETHYST]: {
-    icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-16 h-16"><path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" /></svg>,
-    color: 'text-purple-500',
-    shadow: 'drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]'
-  },
-  [GemType.TOPAZ]: {
-    icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-16 h-16"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clipRule="evenodd" /></svg>,
-    color: 'text-yellow-400',
-    shadow: 'drop-shadow-[0_0_8px_rgba(250,204,21,0.7)]'
-  },
+// --- Pay Table: Payout per symbol for 3, 4, or 5 matches ---
+export const PAY_TABLE: Record<SymbolType, { '3': number; '4': number; '5': number }> = {
+  [SymbolType.J]: { '3': 5, '4': 10, '5': 20 },
+  [SymbolType.Q]: { '3': 5, '4': 10, '5': 20 },
+  [SymbolType.K]: { '3': 8, '4': 15, '5': 30 },
+  [SymbolType.A]: { '3': 8, '4': 15, '5': 30 },
+  [SymbolType.CLUB]: { '3': 10, '4': 20, '5': 50 },
+  [SymbolType.DIAMOND]: { '3': 10, '4': 20, '5': 50 },
+  [SymbolType.HEART]: { '3': 15, '4': 30, '5': 80 },
+  [SymbolType.SPADE]: { '3': 15, '4': 30, '5': 80 },
+  [SymbolType.WILD_ACE]: { '3': 20, '4': 50, '5': 100 }, // Wilds can also form their own paylines
+  [SymbolType.SCATTER]: { '3': 0, '4': 0, '5': 0 }, // Scatters trigger bonuses, no direct payout
+};
+
+
+// --- Visuals for Symbols ---
+export const SymbolVisuals: Record<SymbolType, { icon: React.ReactElement; color: string; shadow: string }> = {
+  [SymbolType.J]: { icon: <div className="text-4xl font-black">J</div>, color: 'text-blue-300', shadow: 'drop-shadow-[0_0_4px_rgba(147,197,253,0.7)]' },
+  [SymbolType.Q]: { icon: <div className="text-4xl font-black">Q</div>, color: 'text-green-300', shadow: 'drop-shadow-[0_0_4px_rgba(134,239,172,0.7)]' },
+  [SymbolType.K]: { icon: <div className="text-4xl font-black">K</div>, color: 'text-red-400', shadow: 'drop-shadow-[0_0_4px_rgba(248,113,113,0.7)]' },
+  [SymbolType.A]: { icon: <div className="text-4xl font-black">A</div>, color: 'text-purple-400', shadow: 'drop-shadow-[0_0_4px_rgba(192,132,252,0.7)]' },
+  [SymbolType.CLUB]: { icon: <div className="text-4xl">♣</div>, color: 'text-green-400', shadow: 'drop-shadow-[0_0_6px_rgba(74,222,128,0.8)]' },
+  [SymbolType.DIAMOND]: { icon: <div className="text-4xl">♦</div>, color: 'text-cyan-400', shadow: 'drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]' },
+  [SymbolType.HEART]: { icon: <div className="text-4xl">♥</div>, color: 'text-red-500', shadow: 'drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]' },
+  [SymbolType.SPADE]: { icon: <div className="text-4xl">♠</div>, color: 'text-yellow-400', shadow: 'drop-shadow-[0_0_6px_rgba(250,204,21,0.8)]' },
+  [SymbolType.WILD_ACE]: { icon: <div className="text-4xl font-black text-yellow-300">A</div>, color: 'text-yellow-300', shadow: 'drop-shadow-[0_0_10px_rgba(252,211,77,1)]' },
+  [SymbolType.SCATTER]: { icon: <div className="text-3xl font-bold">B</div>, color: 'text-indigo-400', shadow: 'drop-shadow-[0_0_8px_rgba(129,140,248,0.9)]' },
 };

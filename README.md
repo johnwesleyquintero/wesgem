@@ -1,10 +1,9 @@
-# 💎 WesGem v0.1 — Skill-Based Casino Prototype
+# 🎰 Project Super Ace — High-Volatility Slot Prototype
 
-**WesGem** is a legal, skill-driven casino-style web game built using **Vite + React + TypeScript + Tailwind**.  
-It’s not gambling — it’s an experiment in **fair play, probability, and pattern recognition** wrapped in a gem-spinning experience.
+**Project Super Ace** is a casino-style web game modeled after modern, high-engagement slots. Built with **Vite + React + TypeScript + Tailwind**, it serves as a robust prototype for exploring the mechanics of digital entertainment and volatility.
 
-This project marks the **first phase** of our long-term goal:  
-> “To create a sovereign, transparent, and skill-first gaming system that rewards precision, not chance.”
+This project represents a strategic pivot from a skill-based concept to a pure, high-volatility entertainment engine.
+> “To build a sovereign, transparent, and high-engagement gaming system that masters the mathematics of excitement.”
 
 ---
 
@@ -12,10 +11,10 @@ This project marks the **first phase** of our long-term goal:
 
 | Layer | Tech | Purpose |
 |-------|------|----------|
-| Frontend | **Vite + React + TypeScript** | Fast, modern, modular base |
-| Styling | **Tailwind CSS** | Utility-first styling for rapid UI iteration |
-| State | **React State** | Lightweight state management for a simple prototype |
-| Build Tools | **Vite** | Ultra-fast dev/build pipeline |
+| Frontend | **Vite + React + TypeScript** | Fast, modern, modular base for dynamic UIs |
+| Styling | **Tailwind CSS** | Utility-first styling for rapid iteration of complex visuals |
+| Audio | **Web Audio API** | Generates dynamic, file-less sound effects for an immersive experience |
+| State | **React State** | Lightweight state management for a complex game loop |
 | Deployment | **AI Studio** | Live demo hosting |
 
 ---
@@ -25,13 +24,17 @@ This project marks the **first phase** of our long-term goal:
 ```
 .
 ├── components/
-│   ├── GemGrid.tsx        # Main game board logic
-│   ├── SpinButton.tsx     # Trigger spins + cooldown
-│   ├── ScoreBoard.tsx     # Tracks points + combos
-│   └── HUD.tsx            # Heads-up display (tokens, status)
-├── App.tsx                # Main application component with core game loop
-├── constants.tsx          # Game constants (grid size, costs, etc.)
-├── types.ts               # TypeScript type definitions (Gem, GameState)
+│   ├── GemGrid.tsx        # Renders the 5x4 symbol grid
+│   ├── SpinButton.tsx     # Initiates the spin/cascade cycle
+│   ├── ScoreBoard.tsx     # Displays total score and last win amount
+│   └── HUD.tsx            # Shows tokens, multiplier, and free spins
+├── logic/
+│   └── scoring.ts       # Core win evaluation and payline logic
+├── utils/
+│   └── audio.ts         # Procedural sound effect generator
+├── App.tsx                # Main application component with the core game loop
+├── constants.tsx          # Game constants (grid size, pay table, etc.)
+├── types.ts               # TypeScript type definitions (Symbol, GameState)
 ├── index.html             # Entry HTML file
 ├── index.tsx              # React entry point
 └── README.md
@@ -39,16 +42,19 @@ This project marks the **first phase** of our long-term goal:
 
 ---
 
-## 🕹️ Gameplay Loop (Skill-Weighted RNG)
+## 🕹️ Gameplay Loop (Volatility Engine)
 
-1. Player clicks **“Spin”**. The spin costs 1 token.
-2. A 1.5-second cooldown begins. Before spinning, the player can strategically **lock one gem** to hold it for the next spin.
-3. The system randomly generates new gems for any unlocked slots using fair, client-side RNG.
-4. The score is calculated based on matching gem patterns (2 of a kind or 3 of a kind).
-5. Consecutive wins build a **combo streak**, applying a score multiplier.
-6. Tokens decrease with each spin. The game ends when the player runs out of tokens.
+1. Player clicks **“Spin”**. The spin costs 10 tokens.
+2. The 5x4 grid is populated with a new set of random card symbols.
+3. The system evaluates all winning combinations (3+ matching symbols on adjacent reels, left-to-right).
+4. All symbols in winning combinations are destroyed.
+5. The remaining symbols fall down, and new symbols cascade from the top to fill the empty spaces.
+6. A **progressive multiplier** increases with each cascade (1x -> 2x -> 3x -> 5x).
+7. The loop repeats from Step 3 until no new winning combinations are formed. All wins within a single spin are multiplied by the current multiplier.
+8. Landing 3+ **Scatter symbols** triggers a **Free Spins** bonus round with enhanced multipliers.
+9. The game ends when the player runs out of tokens.
 
-> 🎯 *“Luck is the variable. Skill is the constant.”*
+> 🎯 *“Volatility is the variable. Excitement is the constant.”*
 
 ---
 
@@ -56,11 +62,11 @@ This project marks the **first phase** of our long-term goal:
 
 | Component/Function | Description |
 |-----------|--------------|
-| `App.tsx` | Manages the main game state (`IDLE`, `SPINNING`, `COOLDOWN`, `GAME_OVER`), tokens, score, and combo streak. Contains the core `handleSpin` logic. |
-| `evaluateCombo` (within `handleSpin`) | Calculates score from matching gem types. A match of 2 grants 10 points, and a match of 3 grants 50 points, before multipliers. |
-| `applyMultiplier` (within `handleSpin`) | Increases the win amount based on the current combo streak (`1 + comboStreak * 0.1`). |
-| `GemGrid.tsx` | Renders the grid of gems and handles the UI logic for locking a gem. |
-| `SpinButton.tsx` | Controls the spin action and displays the cooldown timer visually. |
+| `App.tsx` | Manages the main game state (`IDLE`, `SPINNING`, `EVALUATING`, `CASCADING`, `FREE_SPINS`), tokens, score, multiplier, and free spins. Contains the `handleSpin` and `runCascade` logic that drives the game loop. |
+| `logic/scoring.ts` | The core evaluation engine. It takes a 2D grid of symbols and identifies all winning paylines, calculates the base payout using the `PAY_TABLE`, and returns a set of all winning symbols to be destroyed for the cascade. |
+| `runCascade` (within `App.tsx`) | A recursive-style function that orchestrates the win -> destroy -> drop -> fill -> re-evaluate cycle. It increments the multiplier with each successful cascade. |
+| `GemGrid.tsx` | Renders the 5x4 grid of symbols and handles the visual state changes for spinning and winning symbols. |
+| `HUD.tsx` | Displays the critical state variables for the player: current token balance, the active win multiplier, and the number of remaining free spins. |
 
 ---
 
@@ -70,10 +76,10 @@ This project is built to run directly in AI Studio, but it can be adapted for lo
 
 ```bash
 # 1. This project was scaffolded with Vite. You can create a similar base:
-npm create vite@latest wesgem -- --template react-ts
+npm create vite@latest wes-slots -- --template react-ts
 
 # 2. Move into the folder
-cd wesgem
+cd wes-slots
 
 # 3. Install dependencies
 npm install
@@ -97,18 +103,18 @@ npm run dev
 
 | Phase | Name                | Focus                                   |
 | ----- | ------------------- | --------------------------------------- |
-| 1     | **Gem Scatter**     | Standalone skill-based prototype        |
-| 2     | **WesGem Arena**    | Account system, leaderboards, and user tokens via Supabase |
-| 3     | **WesGem Universe** | A Play-to-Learn model with compliant, skill-based rewards |
+| 1     | **Super Ace Core**  | Standalone high-volatility prototype (Current) |
+| 2     | **WesSlots Arena**  | Account system, leaderboards, and persistent balances via Supabase |
+| 3     | **WesSlots Universe** | Introduction of new slot themes, advanced bonus mechanics, and a unified platform |
 
 ---
 
 ## 🧭 Operator’s Note
 
-WesGem isn’t a get-rich platform.
-It’s a **demonstration of discipline disguised as play** — a sandbox for testing how fairness, mathematics, and design can coexist.
+Project Super Ace isn’t a gambling platform.
+It’s a **demonstration of a high-engagement entertainment engine** — a sandbox for deconstructing and mastering the systems that make modern games compelling.
 
-> “We’re not chasing luck. We’re building systems that make luck measurable.”
+> “We’re not chasing luck. We’re building systems that make excitement predictable.”
 
 ---
 

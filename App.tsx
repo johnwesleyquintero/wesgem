@@ -1,135 +1,148 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Gem, GemType, GameState } from './types';
+import { Symbol, SymbolType, GameState } from './types';
 import {
-  GRID_SIZE,
+  GRID_ROWS,
+  GRID_COLS,
   INITIAL_TOKENS,
   SPIN_COST,
   SPIN_ANIMATION_DURATION,
-  SPIN_COOLDOWN,
-  GEM_TYPES
+  CASCADE_ANIMATION_DURATION,
+  SYMBOL_TYPES
 } from './constants';
 import HUD from './components/HUD';
 import ScoreBoard from './components/ScoreBoard';
-import GemGrid from './components/GemGrid';
+import GemGrid from './components/GemGrid'; // Renaming this would be ideal, but we'll reuse for now
 import SpinButton from './components/SpinButton';
+import { evaluateGrid } from './logic/scoring';
+import { playSound } from './utils/audio';
 
-const generateRandomGem = (id: string, locked: boolean = false): Gem => ({
-  id,
-  type: GEM_TYPES[Math.floor(Math.random() * GEM_TYPES.length)],
-  locked,
+const generateRandomSymbol = (row: number, col: number): Symbol => ({
+  id: `symbol-${row}-${col}`,
+  type: SYMBOL_TYPES[Math.floor(Math.random() * SYMBOL_TYPES.length)],
+  row,
+  col,
 });
 
+const generateGrid = (): Symbol[][] => {
+  return Array.from({ length: GRID_ROWS }, (_, r) =>
+    Array.from({ length: GRID_COLS }, (_, c) => generateRandomSymbol(r, c))
+  );
+};
+
 const App: React.FC = () => {
-  const [gems, setGems] = useState<Gem[]>([]);
+  const [grid, setGrid] = useState<Symbol[][]>([]);
   const [tokens, setTokens] = useState<number>(INITIAL_TOKENS);
   const [score, setScore] = useState<number>(0);
-  const [comboStreak, setComboStreak] = useState<number>(0);
   const [gameState, setGameState] = useState<GameState>('IDLE');
   const [lastWin, setLastWin] = useState<number>(0);
-  const [winningGemType, setWinningGemType] = useState<GemType | null>(null);
-
-  const initialGems = useMemo(() => 
-    Array.from({ length: GRID_SIZE }, (_, i) => generateRandomGem(`gem-${i}`))
-  , []);
-
+  const [multiplier, setMultiplier] = useState<number>(1);
+  const [freeSpins, setFreeSpins] = useState<number>(0);
+  
   useEffect(() => {
-    setGems(initialGems);
-  }, [initialGems]);
+    setGrid(generateGrid());
+  }, []);
 
   const handleRestart = useCallback(() => {
+    playSound('restart');
     setTokens(INITIAL_TOKENS);
     setScore(0);
-    setComboStreak(0);
     setLastWin(0);
-    setGems(initialGems);
+    setMultiplier(1);
+    setFreeSpins(0);
+    setGrid(generateGrid());
     setGameState('IDLE');
-    setWinningGemType(null);
-  }, [initialGems]);
-  
-  const handleSpin = useCallback(() => {
-    if (gameState === 'SPINNING' || gameState === 'COOLDOWN' || tokens < SPIN_COST) {
-      if (tokens < SPIN_COST) setGameState('GAME_OVER');
-      return;
+  }, []);
+
+  const runCascade = useCallback((currentGrid: Symbol[][], currentMultiplier: number) => {
+    setGameState('EVALUATING');
+    const { winningSymbols, totalWin, scatterCount } = evaluateGrid(currentGrid);
+
+    if (totalWin > 0 || scatterCount > 0) {
+      const winAmount = totalWin * currentMultiplier;
+      setScore(prev => prev + winAmount);
+      setLastWin(winAmount);
+      playSound('win');
+      
+      if (scatterCount >= 3) {
+        setFreeSpins(prev => prev + 10);
+      }
+      
+      setTimeout(() => {
+        setGameState('CASCADING');
+        // Create new grid by removing winning symbols and letting others fall
+        let newGrid = currentGrid.map(row => row.map(symbol => 
+            winningSymbols.has(symbol.id) ? { ...symbol, type: null } : symbol
+        ));
+
+        // Let symbols fall
+        for (let col = 0; col < GRID_COLS; col++) {
+            let emptyRow = GRID_ROWS - 1;
+            for (let row = GRID_ROWS - 1; row >= 0; row--) {
+                if (newGrid[row][col].type !== null) {
+                    [newGrid[emptyRow][col], newGrid[row][col]] = [newGrid[row][col], newGrid[emptyRow][col]];
+                    emptyRow--;
+                }
+            }
+        }
+
+        // Fill empty spots with new symbols
+        newGrid = newGrid.map((row, r) => row.map((symbol, c) => 
+            symbol.type === null ? generateRandomSymbol(r, c) : symbol
+        ));
+        
+        setGrid(newGrid);
+        setMultiplier(prev => prev + 1);
+        runCascade(newGrid, currentMultiplier + 1);
+
+      }, CASCADE_ANIMATION_DURATION);
+    } else {
+        // No more wins, end the spin cycle
+        if(freeSpins > 0) {
+          setFreeSpins(prev => prev-1);
+        }
+        setGameState('IDLE');
     }
 
-    setGameState('SPINNING');
-    setTokens(prev => prev - SPIN_COST);
-    setLastWin(0);
-    setWinningGemType(null); // Reset winning gems on new spin
+  }, [freeSpins]);
+  
+  const handleSpin = useCallback(() => {
+    if (gameState !== 'IDLE' || (tokens < SPIN_COST && freeSpins === 0)) {
+       if (tokens < SPIN_COST) setGameState('GAME_OVER');
+       return;
+    }
 
-    const newGems = gems.map(gem => 
-      gem.locked ? gem : generateRandomGem(gem.id)
-    );
-    setGems(newGems);
+    playSound('spin');
+    setGameState('SPINNING');
+    if (freeSpins === 0) {
+        setTokens(prev => prev - SPIN_COST);
+    }
+    setLastWin(0);
+    setMultiplier(1);
+
+    const newGrid = generateGrid();
+    setGrid(newGrid);
 
     setTimeout(() => {
-      // --- Scoring Logic ---
-      const counts: Record<string, number> = {};
-      newGems.forEach(gem => {
-        counts[gem.type] = (counts[gem.type] || 0) + 1;
-      });
-      
-      const maxCount = Math.max(...Object.values(counts), 0);
-      let baseScore = 0;
-      if (maxCount === 2) baseScore = 10;
-      if (maxCount === 3) baseScore = 50;
-      
-      let currentWin = 0;
-      let currentWinningType: GemType | null = null;
-      if (baseScore > 0) {
-        // Find the winning gem type to apply effects
-        for (const type in counts) {
-          if (counts[type] === maxCount) {
-            currentWinningType = type as GemType;
-            break;
-          }
-        }
-        const multiplier = 1 + comboStreak * 0.1;
-        currentWin = Math.round(baseScore * multiplier);
-        setScore(prev => prev + currentWin);
-        setComboStreak(prev => prev + 1);
-      } else {
-        setComboStreak(0);
-      }
-      setLastWin(currentWin);
-      setWinningGemType(currentWinningType);
-      
-      if (tokens - SPIN_COST <= 0 && currentWin === 0) {
-        setGameState('GAME_OVER');
-      } else {
-        setGameState('COOLDOWN');
-        setTimeout(() => setGameState('IDLE'), SPIN_COOLDOWN);
-      }
-
+      runCascade(newGrid, freeSpins > 0 ? 2 : 1); // Start with higher base multiplier in free spins
     }, SPIN_ANIMATION_DURATION);
 
-  }, [gameState, tokens, gems, comboStreak]);
+  }, [gameState, tokens, freeSpins, runCascade]);
 
-  const handleLockGem = useCallback((idToToggle: string) => {
-    if (gameState === 'SPINNING') return;
-    setGems(prevGems => {
-      const isAlreadyLocked = prevGems.find(g => g.id === idToToggle)?.locked;
-      return prevGems.map(gem => ({
-        ...gem,
-        locked: gem.id === idToToggle ? !gem.locked : false,
-      }));
-    });
-  }, [gameState]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-black flex flex-col items-center justify-center p-4 selection:bg-indigo-500/30">
-        <main className="w-full max-w-md mx-auto bg-black/30 backdrop-blur-xl rounded-2xl shadow-2xl shadow-indigo-500/20 border border-white/10 p-6 md:p-8 flex flex-col gap-6">
+        <main className="w-full max-w-lg mx-auto bg-black/30 backdrop-blur-xl rounded-2xl shadow-2xl shadow-indigo-500/20 border border-white/10 p-4 md:p-6 flex flex-col gap-4">
           <header className="flex justify-between items-center gap-4">
             <ScoreBoard score={score} lastWin={lastWin} />
-            <HUD tokens={tokens} comboStreak={comboStreak} />
+            <HUD tokens={tokens} comboStreak={multiplier} freeSpins={freeSpins} />
           </header>
 
-          <GemGrid gems={gems} gameState={gameState} onLockGem={handleLockGem} winningGemType={winningGemType} />
+          <GemGrid gems={grid.flat()} gameState={gameState} onLockGem={() => {}} winningGemType={null} />
           
           <SpinButton gameState={gameState} onSpin={handleSpin} />
         </main>
-        <footer className="text-center mt-8 text-xs text-gray-500">
-          <p>WesGem v0.1 — Skill is the constant.</p>
+        <footer className="text-center mt-6 text-xs text-gray-500">
+          <p>Project Super Ace — Volatility is the variable.</p>
           <p>&copy; 2025 WesAI Systems</p>
         </footer>
 

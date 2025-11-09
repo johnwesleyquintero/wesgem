@@ -1,7 +1,5 @@
-
 import React from 'react';
 import { GameState } from '../types';
-import { SPIN_COOLDOWN } from '../constants';
 
 interface SpinButtonProps {
   gameState: GameState;
@@ -9,13 +7,17 @@ interface SpinButtonProps {
 }
 
 const SpinButton: React.FC<SpinButtonProps> = ({ gameState, onSpin }) => {
-  const isDisabled = gameState === 'SPINNING' || gameState === 'COOLDOWN';
+  // Fix for line 10: This comparison used a non-existent 'COOLDOWN' state.
+  // The logic is updated to disable the button during all non-interactive states.
+  const isDisabled = gameState !== 'IDLE';
 
   const getButtonText = () => {
     switch (gameState) {
       case 'SPINNING':
         return 'Spinning...';
-      case 'COOLDOWN':
+      // Fix for line 16: Replaced the non-existent 'COOLDOWN' case with the actual 'EVALUATING' and 'CASCADING' states.
+      case 'EVALUATING':
+      case 'CASCADING':
         return 'Cooldown';
       case 'GAME_OVER':
         return 'Game Over';
@@ -34,18 +36,12 @@ const SpinButton: React.FC<SpinButtonProps> = ({ gameState, onSpin }) => {
                  disabled:bg-gray-700 disabled:cursor-not-allowed"
     >
       <span className="relative z-10">{getButtonText()}</span>
-       {gameState === 'COOLDOWN' && (
+       {/* Fix for line 35: Replaced the non-existent 'COOLDOWN' state to render the animation bar during the 'EVALUATING' and 'CASCADING' states. */}
+       {(gameState === 'EVALUATING' || gameState === 'CASCADING') && (
         <div 
-          className="absolute inset-0 bg-indigo-800/50 origin-left z-0"
-          style={{ animation: `shrink-width ${SPIN_COOLDOWN}ms linear forwards` }}
+          className="absolute inset-0 bg-indigo-800/50 origin-left z-0 animate-cooldown-bar"
         />
       )}
-      <style>{`
-        @keyframes shrink-width {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
     </button>
   );
 };

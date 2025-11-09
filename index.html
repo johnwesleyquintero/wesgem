@@ -47,6 +47,14 @@
       .animate-appear-sparkle {
         animation: appear-sparkle 0.8s ease-in-out;
       }
+      /* Moved from SpinButton.tsx for better performance and organization */
+      @keyframes shrink-width {
+        from { width: 100%; }
+        to { width: 0%; }
+      }
+      .animate-cooldown-bar {
+        animation: shrink-width 1500ms linear forwards;
+      }
     </style>
   <script type="importmap">
 {

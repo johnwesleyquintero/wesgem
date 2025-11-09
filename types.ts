@@ -1,17 +1,22 @@
-
-export enum GemType {
+export enum SymbolType {
+  J = 'J',
+  Q = 'Q',
+  K = 'K',
+  A = 'A',
+  SPADE = 'SPADE',
+  HEART = 'HEART',
+  CLUB = 'CLUB',
   DIAMOND = 'DIAMOND',
-  RUBY = 'RUBY',
-  SAPPHIRE = 'SAPPHIRE',
-  EMERALD = 'EMERALD',
-  AMETHYST = 'AMETHYST',
-  TOPAZ = 'TOPAZ',
+  WILD_ACE = 'WILD_ACE',
+  SCATTER = 'SCATTER',
 }
 
-export interface Gem {
-  id: string;
-  type: GemType;
-  locked: boolean;
+export interface Symbol {
+  id: string; // Unique identifier (e.g., `row-0-col-0`)
+  type: SymbolType;
+  row: number;
+  col: number;
 }
 
-export type GameState = 'IDLE' | 'SPINNING' | 'COOLDOWN' | 'GAME_OVER';
+// GameState expanded to handle cascading wins and bonus rounds
+export type GameState = 'IDLE' | 'SPINNING' | 'EVALUATING' | 'CASCADING' | 'FREE_SPINS' | 'GAME_OVER';
