@@ -43,6 +43,13 @@ const App: React.FC = () => {
     setGrid(generateGrid());
   }, []);
 
+  // Effect to play sound on game over
+  useEffect(() => {
+    if (gameState === 'GAME_OVER') {
+      playSound('gameOver');
+    }
+  }, [gameState]);
+
   const handleRestart = useCallback(() => {
     playSound('restart');
     setTokens(INITIAL_TOKENS);
@@ -65,7 +72,7 @@ const App: React.FC = () => {
       const winAmount = totalWin * currentMultiplier;
       setScore(prev => prev + winAmount);
       setLastWin(winAmount);
-      playSound('win');
+      playSound('win', { amount: winAmount });
       
       if (scatterCount >= 3) {
         setFreeSpins(prev => prev + 10);
@@ -95,6 +102,7 @@ const App: React.FC = () => {
         ));
         
         setGrid(newGrid);
+        playSound('cascade');
         setMultiplier(prev => prev + 1);
         runCascade(newGrid, currentMultiplier + 1);
 
@@ -112,7 +120,10 @@ const App: React.FC = () => {
   
   const handleSpin = useCallback(() => {
     if (gameState !== 'IDLE' || (tokens < SPIN_COST && freeSpins === 0)) {
-       if (tokens < SPIN_COST) setGameState('GAME_OVER');
+       if (tokens < SPIN_COST && gameState !== 'GAME_OVER') {
+           playSound('lose');
+           setGameState('GAME_OVER');
+       }
        return;
     }
 

@@ -14,9 +14,9 @@ const initializeAudio = () => {
   }
 };
 
-type SoundType = 'spin' | 'win' | 'lock' | 'lose' | 'gameOver' | 'restart';
+type SoundType = 'spin' | 'win' | 'lock' | 'lose' | 'gameOver' | 'restart' | 'cascade';
 
-export const playSound = (type: SoundType) => {
+export const playSound = (type: SoundType, details?: { amount?: number }) => {
   // Audio must be initialized after a user gesture.
   // We call this on every play, but it will only initialize the context once.
   initializeAudio();
@@ -47,16 +47,33 @@ export const playSound = (type: SoundType) => {
 
     case 'win':
       // A quick ascending arpeggio for a positive feel
+      // Pitch scales with win amount
+      const winAmount = details?.amount ?? 0;
+      const baseFreq = 500;
+      // Use a logarithmic scale for perceived pitch, capped to avoid being too shrill
+      const freqStep = Math.min(40 * Math.log(winAmount + 1), 700);
+      
       gainNode.gain.linearRampToValueAtTime(0.2, now + 0.01);
       oscillator.type = 'triangle';
-      oscillator.frequency.setValueAtTime(600, now);
-      oscillator.frequency.setValueAtTime(800, now + 0.1);
-      oscillator.frequency.setValueAtTime(1200, now + 0.2);
+      oscillator.frequency.setValueAtTime(baseFreq + freqStep, now);
+      oscillator.frequency.setValueAtTime(baseFreq + freqStep + 200, now + 0.1);
+      oscillator.frequency.setValueAtTime(baseFreq + freqStep + 400, now + 0.2);
       gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
       oscillator.start(now);
       oscillator.stop(now + 0.3);
       break;
       
+    case 'cascade':
+      // A soft whoosh for falling symbols
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(800, now);
+      oscillator.frequency.linearRampToValueAtTime(400, now + 0.2);
+      gainNode.gain.linearRampToValueAtTime(0.08, now + 0.01);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+      oscillator.start(now);
+      oscillator.stop(now + 0.2);
+      break;
+
     case 'lock':
       // A sharp, metallic click
       oscillator.type = 'sine';
@@ -68,7 +85,7 @@ export const playSound = (type: SoundType) => {
       break;
       
     case 'lose':
-      // A soft, low-pitched 'thud'
+      // A soft, low-pitched 'thud' for a failed spin attempt
       oscillator.type = 'square';
       oscillator.frequency.setValueAtTime(200, now);
       oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.2);

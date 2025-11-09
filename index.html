@@ -47,6 +47,30 @@
       .animate-appear-sparkle {
         animation: appear-sparkle 0.8s ease-in-out;
       }
+      @keyframes fly-up-and-fade {
+        0% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+      }
+      .animate-fly-up {
+        animation: fly-up-and-fade 1s ease-out forwards;
+      }
+      @keyframes pulse-scale {
+        0%, 100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.15);
+        }
+      }
+      .animate-pulse-scale {
+        animation: pulse-scale 0.4s ease-in-out;
+      }
       /* Moved from SpinButton.tsx for better performance and organization */
       @keyframes shrink-width {
         from { width: 100%; }

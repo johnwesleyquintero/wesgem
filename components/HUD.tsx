@@ -15,7 +15,10 @@ const HUD: React.FC<HUDProps> = ({ tokens, comboStreak, freeSpins }) => {
           <span className="text-2xl font-mono font-bold text-white">{freeSpins}</span>
         </div>
       )}
-      <div className="flex flex-col items-center justify-center bg-black/20 p-2 rounded-md border border-white/10 w-24">
+      <div 
+        key={comboStreak}
+        className="flex flex-col items-center justify-center bg-black/20 p-2 rounded-md border border-white/10 w-24 animate-pulse-scale"
+      >
         <span className="text-xs font-semibold text-amber-300 tracking-wider">MULTIPLIER</span>
         <span className="text-2xl font-mono font-bold text-white">x{comboStreak}</span>
       </div>
