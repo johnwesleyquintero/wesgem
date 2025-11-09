@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WesGem v0.1 - Skill Casino</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @keyframes spin-gem {
+        0% { transform: rotateY(0deg) scale(0.8); opacity: 0.5; }
+        50% { transform: rotateY(180deg) scale(1.1); opacity: 1; }
+        100% { transform: rotateY(360deg) scale(1); opacity: 1; }
+      }
+      .animate-gem-spin {
+        animation: spin-gem 1s ease-in-out;
+      }
+      @keyframes pulse-glow {
+        0%, 100% {
+          box-shadow: 0 0 15px rgba(251, 191, 36, 0.6), 0 0 20px rgba(251, 191, 36, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 25px rgba(251, 191, 36, 1), 0 0 35px rgba(251, 191, 36, 0.7);
+        }
+      }
+      .locked-gem-glow {
+        animation: pulse-glow 2s infinite;
+      }
+      @keyframes win-glow {
+        0% { box-shadow: 0 0 0px rgba(251, 191, 36, 0); }
+        50% { box-shadow: 0 0 30px rgba(251, 191, 36, 1), 0 0 10px rgba(255, 255, 255, 0.5); }
+        100% { box-shadow: 0 0 0px rgba(251, 191, 36, 0); }
+      }
+      .animate-win-glow {
+        animation: win-glow 1.2s ease-in-out;
+      }
+      @keyframes appear-sparkle {
+        0%, 100% {
+          transform: scale(1);
+          filter: brightness(1);
+        }
+        50% {
+          transform: scale(1.05);
+          filter: brightness(1.5) drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+        }
+      }
+      .animate-appear-sparkle {
+        animation: appear-sparkle 0.8s ease-in-out;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-gray-900 text-white font-sans antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

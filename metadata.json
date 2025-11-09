@@ -1,0 +1,5 @@
+{
+  "name": "WesGem v0.1 - Skill Casino",
+  "description": "A legal, skill-driven casino-style web game prototype built using Vite + React + TypeScript + Tailwind. An experiment in fair play, probability, and pattern recognition wrapped in a gem-spinning experience.",
+  "requestFramePermissions": []
+}
