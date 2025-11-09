@@ -13,7 +13,7 @@ export enum SymbolType {
 
 export interface Symbol {
   id: string; // Unique identifier (e.g., `row-0-col-0`)
-  type: SymbolType;
+  type: SymbolType | null; // A symbol can be cleared during a cascade
   row: number;
   col: number;
 }
