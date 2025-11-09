@@ -11,7 +11,7 @@ import {
 } from './constants';
 import HUD from './components/HUD';
 import ScoreBoard from './components/ScoreBoard';
-import GemGrid from './components/GemGrid'; // Renaming this would be ideal, but we'll reuse for now
+import SymbolGrid from './components/GemGrid';
 import SpinButton from './components/SpinButton';
 import { evaluateGrid } from './logic/scoring';
 import { playSound } from './utils/audio';
@@ -28,6 +28,8 @@ const generateGrid = (): Symbol[][] => {
     Array.from({ length: GRID_COLS }, (_, c) => generateRandomSymbol(r, c))
   );
 };
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const App: React.FC = () => {
   const [grid, setGrid] = useState<Symbol[][]>([]);
@@ -61,66 +63,70 @@ const App: React.FC = () => {
     setWinningSymbolIds(new Set());
     setGameState('IDLE');
   }, []);
+  
+  const runCascade = useCallback(async (currentGrid: Symbol[][], currentMultiplier: number) => {
+    let gridInPlay = currentGrid;
+    let multi = currentMultiplier;
 
-  const runCascade = useCallback((currentGrid: Symbol[][], currentMultiplier: number) => {
-    setGameState('EVALUATING');
-    const { winningSymbols, totalWin, scatterCount } = evaluateGrid(currentGrid);
-    
-    setWinningSymbolIds(winningSymbols);
+    while (true) {
+        setGameState('EVALUATING');
+        const { winningSymbols, totalWin, scatterCount } = evaluateGrid(gridInPlay);
+        
+        setWinningSymbolIds(winningSymbols);
 
-    if (totalWin > 0 || scatterCount > 0) {
-      const winAmount = totalWin * currentMultiplier;
-      setScore(prev => prev + winAmount);
-      setLastWin(winAmount);
-      playSound('win', { amount: winAmount });
-      
-      if (scatterCount >= 3) {
-        setFreeSpins(prev => prev + 10);
-      }
-      
-      setTimeout(() => {
-        setGameState('CASCADING');
-        // Create new grid by removing winning symbols and letting others fall
-        let newGrid = currentGrid.map(row => row.map(symbol => 
-            winningSymbols.has(symbol.id) ? { ...symbol, type: null } : symbol
-        ));
+        if (totalWin > 0 || scatterCount > 0) {
+            const winAmount = totalWin * multi;
+            setScore(prev => prev + winAmount);
+            setLastWin(winAmount);
+            playSound('win', { amount: winAmount });
+            
+            if (scatterCount >= 3) {
+                setFreeSpins(prev => prev + 10);
+            }
+            
+            await delay(CASCADE_ANIMATION_DURATION);
+            
+            setGameState('CASCADING');
+            let newGrid = gridInPlay.map(row => row.map(symbol => 
+                winningSymbols.has(symbol.id) ? { ...symbol, type: null } : symbol
+            ));
 
-        // Let symbols fall
-        for (let col = 0; col < GRID_COLS; col++) {
-            let emptyRow = GRID_ROWS - 1;
-            for (let row = GRID_ROWS - 1; row >= 0; row--) {
-                if (newGrid[row][col].type !== null) {
-                    [newGrid[emptyRow][col], newGrid[row][col]] = [newGrid[row][col], newGrid[emptyRow][col]];
-                    emptyRow--;
+            for (let col = 0; col < GRID_COLS; col++) {
+                let emptyRow = GRID_ROWS - 1;
+                for (let row = GRID_ROWS - 1; row >= 0; row--) {
+                    if (newGrid[row][col].type !== null) {
+                        [newGrid[emptyRow][col], newGrid[row][col]] = [newGrid[row][col], newGrid[emptyRow][col]];
+                        emptyRow--;
+                    }
                 }
             }
-        }
 
-        // Fill empty spots with new symbols
-        newGrid = newGrid.map((row, r) => row.map((symbol, c) => 
-            symbol.type === null ? generateRandomSymbol(r, c) : symbol
-        ));
-        
-        setGrid(newGrid);
-        playSound('cascade');
-        setMultiplier(prev => prev + 1);
-        runCascade(newGrid, currentMultiplier + 1);
-
-      }, CASCADE_ANIMATION_DURATION);
-    } else {
-        // No more wins, end the spin cycle
-        if(freeSpins > 0) {
-          setFreeSpins(prev => prev-1);
+            newGrid = newGrid.map((row, r) => row.map((symbol, c) => 
+                symbol.type === null ? generateRandomSymbol(r, c) : symbol
+            ));
+            
+            setGrid(newGrid);
+            playSound('cascade');
+            setMultiplier(prev => prev + 1);
+            
+            gridInPlay = newGrid;
+            multi++;
+        } else {
+            break; // No more wins, exit loop
         }
-        setWinningSymbolIds(new Set());
-        setGameState('IDLE');
     }
-
+    
+    // End of spin cycle
+    if (freeSpins > 0) {
+        setFreeSpins(prev => prev - 1);
+    }
+    setWinningSymbolIds(new Set());
+    setGameState('IDLE');
   }, [freeSpins]);
   
-  const handleSpin = useCallback(() => {
+  const handleSpin = useCallback(async () => {
     if (gameState !== 'IDLE' || (tokens < SPIN_COST && freeSpins === 0)) {
-       if (tokens < SPIN_COST && gameState !== 'GAME_OVER') {
+       if (tokens < SPIN_COST && gameState !== 'GAME_OVER' && freeSpins === 0) {
            playSound('lose');
            setGameState('GAME_OVER');
        }
@@ -139,22 +145,22 @@ const App: React.FC = () => {
     const newGrid = generateGrid();
     setGrid(newGrid);
 
-    setTimeout(() => {
-      runCascade(newGrid, freeSpins > 0 ? 2 : 1); // Start with higher base multiplier in free spins
-    }, SPIN_ANIMATION_DURATION);
+    await delay(SPIN_ANIMATION_DURATION);
+    
+    await runCascade(newGrid, freeSpins > 0 ? 2 : 1); // Start with higher base multiplier in free spins
 
   }, [gameState, tokens, freeSpins, runCascade]);
 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-black flex flex-col items-center justify-center p-4 selection:bg-indigo-500/30">
-        <main className="w-full max-w-lg mx-auto bg-black/30 backdrop-blur-xl rounded-2xl shadow-2xl shadow-indigo-500/20 border border-white/10 p-4 md:p-6 flex flex-col gap-4">
+        <main className={`w-full max-w-lg mx-auto bg-black/30 backdrop-blur-xl rounded-2xl shadow-2xl shadow-indigo-500/20 border border-white/10 p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ${freeSpins > 0 ? 'free-spins-active' : ''}`}>
           <header className="flex justify-between items-center gap-4">
             <ScoreBoard score={score} lastWin={lastWin} />
             <HUD tokens={tokens} comboStreak={multiplier} freeSpins={freeSpins} />
           </header>
 
-          <GemGrid gems={grid.flat()} gameState={gameState} winningSymbolIds={winningSymbolIds} />
+          <SymbolGrid symbols={grid.flat()} gameState={gameState} winningSymbolIds={winningSymbolIds} />
           
           <SpinButton gameState={gameState} onSpin={handleSpin} />
         </main>

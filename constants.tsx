@@ -8,6 +8,7 @@ export const INITIAL_TOKENS = 1000; // Increased for higher volatility
 export const SPIN_COST = 10; // Higher cost per spin
 export const SPIN_ANIMATION_DURATION = 1000;
 export const CASCADE_ANIMATION_DURATION = 500;
+export const SPIN_BUTTON_COOLDOWN_DURATION = 1500;
 
 // --- Symbol Definitions ---
 export const SYMBOL_TYPES = [

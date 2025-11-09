@@ -1,14 +1,14 @@
 import React from 'react';
-import { Symbol as GameSymbol, SymbolType, GameState } from '../types';
+import { Symbol as GameSymbol, GameState } from '../types';
 import { SymbolVisuals, GRID_COLS } from '../constants';
 
-interface GemIconProps {
+interface SymbolIconProps {
   symbol: GameSymbol;
   isSpinning: boolean;
   isWinning: boolean;
 }
 
-const SymbolIcon: React.FC<GemIconProps> = ({ symbol, isSpinning, isWinning }) => {
+const SymbolIcon: React.FC<SymbolIconProps> = ({ symbol, isSpinning, isWinning }) => {
   if (!symbol.type) return null; // Don't render empty slots during cascade
   const visual = SymbolVisuals[symbol.type];
   
@@ -26,13 +26,13 @@ const SymbolIcon: React.FC<GemIconProps> = ({ symbol, isSpinning, isWinning }) =
   );
 };
 
-interface GemGridProps {
-  gems: GameSymbol[]; // Now expecting a flat array of all symbols
+interface SymbolGridProps {
+  symbols: GameSymbol[]; // Now expecting a flat array of all symbols
   gameState: GameState;
   winningSymbolIds: Set<string>;
 }
 
-const GemGrid: React.FC<GemGridProps> = ({ gems, gameState, winningSymbolIds }) => {
+const SymbolGrid: React.FC<SymbolGridProps> = ({ symbols, gameState, winningSymbolIds }) => {
   const isSpinning = gameState === 'SPINNING';
 
   return (
@@ -42,7 +42,7 @@ const GemGrid: React.FC<GemGridProps> = ({ gems, gameState, winningSymbolIds }) 
         gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
       }}
     >
-      {gems.map((symbol) => {
+      {symbols.map((symbol) => {
         const isWinning = winningSymbolIds.has(symbol.id);
         return (
           <SymbolIcon key={symbol.id} symbol={symbol} isSpinning={isSpinning} isWinning={isWinning} />
@@ -52,4 +52,4 @@ const GemGrid: React.FC<GemGridProps> = ({ gems, gameState, winningSymbolIds }) 
   );
 };
 
-export default GemGrid;
+export default SymbolGrid;

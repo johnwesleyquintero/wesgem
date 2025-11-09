@@ -1,5 +1,6 @@
 import React from 'react';
 import { GameState } from '../types';
+import { SPIN_BUTTON_COOLDOWN_DURATION } from '../constants';
 
 interface SpinButtonProps {
   gameState: GameState;
@@ -7,15 +8,12 @@ interface SpinButtonProps {
 }
 
 const SpinButton: React.FC<SpinButtonProps> = ({ gameState, onSpin }) => {
-  // Fix for line 10: This comparison used a non-existent 'COOLDOWN' state.
-  // The logic is updated to disable the button during all non-interactive states.
   const isDisabled = gameState !== 'IDLE';
 
   const getButtonText = () => {
     switch (gameState) {
       case 'SPINNING':
         return 'Spinning...';
-      // Fix for line 16: Replaced the non-existent 'COOLDOWN' case with the actual 'EVALUATING' and 'CASCADING' states.
       case 'EVALUATING':
       case 'CASCADING':
         return 'Cooldown';
@@ -36,10 +34,10 @@ const SpinButton: React.FC<SpinButtonProps> = ({ gameState, onSpin }) => {
                  disabled:bg-gray-700 disabled:cursor-not-allowed"
     >
       <span className="relative z-10">{getButtonText()}</span>
-       {/* Fix for line 35: Replaced the non-existent 'COOLDOWN' state to render the animation bar during the 'EVALUATING' and 'CASCADING' states. */}
        {(gameState === 'EVALUATING' || gameState === 'CASCADING') && (
         <div 
           className="absolute inset-0 bg-indigo-800/50 origin-left z-0 animate-cooldown-bar"
+          style={{ animationDuration: `${SPIN_BUTTON_COOLDOWN_DURATION}ms` }}
         />
       )}
     </button>

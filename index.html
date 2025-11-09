@@ -77,7 +77,14 @@
         to { width: 0%; }
       }
       .animate-cooldown-bar {
-        animation: shrink-width 1500ms linear forwards;
+        /* Duration is now controlled by inline style in SpinButton.tsx for consistency with game logic */
+        animation-name: shrink-width;
+        animation-timing-function: linear;
+        animation-fill-mode: forwards;
+      }
+      .free-spins-active {
+        box-shadow: 0 0 20px rgba(167, 139, 250, 0.7), 0 0 30px rgba(129, 140, 248, 0.5), inset 0 0 15px rgba(129, 140, 248, 0.3);
+        border-color: rgba(167, 139, 250, 0.8) !important;
       }
     </style>
   <script type="importmap">
